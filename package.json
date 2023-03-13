@@ -1,5 +1,5 @@
 {
-  "name": "sagoon_realtime_appsync",
+  "name": "dev_realtime_appsync",
   "version": "1.0.0",
   "description": "",
   "main": "handler.js",

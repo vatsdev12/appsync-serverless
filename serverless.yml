@@ -11,12 +11,12 @@
 #
 # Happy Coding!
 
-service: sagoon-realtime-appsync
+service: dev-realtime-appsync
 frameworkVersion: "2"
 
 plugins:
-   - serverless-appsync-plugin
-   - serverless-pseudo-parameters
+  - serverless-appsync-plugin
+  - serverless-pseudo-parameters
 
 provider:
   name: aws
@@ -28,7 +28,12 @@ provider:
     role:
       statements:
         - Effect: "Allow"
-          Action:            
+          Action:
+            - lambda:InvokeFunction
+            - lambda:InvokeAsync
+          Resource: "*"      
+        - Effect: "Allow"
+          Action:
             - "dynamodb:PutItem"
             - "dynamodb:UpdateItem"
             - "dynamodb:DeleteItem"
@@ -36,85 +41,109 @@ provider:
             - "dynamodb:Scan"
           Resource: "arn:aws:dynamodb:#{AWS::Region}:*:table/${self:custom.TODO_TABLE}"
 
-custom:      
+custom:
   TODO_TABLE: todo-table
 
   appSync:
     name: appsync-todo-apis-demo
-    authenticationType: API_KEY
-    mappingTemplates:      
-      - type: Mutation
-        field: createTodo
-        dataSource: createTodoFunction
-        request: false
-        response: false
-      - type: Mutation
-        field: updateTodo
-        dataSource: updateTodoFunction
-        request: false
-        response: false
-      - type: Mutation
-        field: deleteTodo
-        dataSource: deleteTodoFunction
-        request: false
-        response: false
-      - type: Query
-        field: getTodos
-        dataSource: getTodosFunction
-        request: false
-        response: false      
-    dataSources:        
-      - type: AWS_LAMBDA
-        name: createTodoFunction
-        config:
-          functionName: createTodo
+    authenticationType: AWS_LAMBDA
+    lambdaAuthorizerConfig:
+      lambdaFunctionArn: arn:aws:lambda:us-east-1:929042302465:function:sgn-feedrank-dev-dev-deleteStories
 
-      - type: AWS_LAMBDA
-        name: updateTodoFunction
-        config:
-          functionName: updateTodo
+    # mappingTemplates:
+    #   - type: Mutation
+    #     field: createTodo
+    #     dataSource: createTodoFunction
+    #     request: false
+    #     response: false
+    #   - type: Mutation
+    #     field: updateTodo
+    #     dataSource: updateTodoFunction
+    #     request: false
+    #     response: false
+    #   - type: Mutation
+    #     field: deleteTodo
+    #     dataSource: deleteTodoFunction
+    #     request: false
+    #     response: false
+    #   - type: Query
+    #     field: getTodos
+    #     dataSource: getTodosFunction
+    #     request: false
+    #     response: false
+    # dataSources:
+    #   - type: AWS_LAMBDA
+    #     name: createTodoFunction
+    #     config:
+    #       functionName: createTodo
 
-      - type: AWS_LAMBDA
-        name: deleteTodoFunction
-        config:
-          functionName: deleteTodo
+    #   - type: AWS_LAMBDA
+    #     name: updateTodoFunction
+    #     config:
+    #       functionName: updateTodo
 
-      - type: AWS_LAMBDA
-        name: getTodosFunction
-        config:
-          functionName: getTodos                     
+    #   - type: AWS_LAMBDA
+    #     name: deleteTodoFunction
+    #     config:
+    #       functionName: deleteTodo
 
-functions: 
-  getTodos:
-    handler: functions/getTodos.handler
-    environment:
-      TODO_TABLE_NAME: !Ref TodoTable
+    #   - type: AWS_LAMBDA
+    #     name: getTodosFunction
+    #     config:
+    #       functionName: getTodos
 
-  createTodo:
-    handler: functions/createTodo.handler
-    environment:
-      TODO_TABLE_NAME: !Ref TodoTable
+  # AppSyncAuthorizer:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: ./appsync-authorizer/
+  #     Handler: appsync-authorizer.handler
+  #     Description: Lambda Authorizer for AppSync
+  #     FunctionName: appsync-authorizer
 
-  updateTodo:
-    handler: functions/updateTodo.handler
-    environment:
-      TODO_TABLE_NAME: !Ref TodoTable
+  # LambdaPermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     FunctionName: !GetAtt arn:aws:lambda:us-east-1:929042302465:function:dev-realtime-appsync-dev-appSyncAuthorization
+  #     Action: lambda:InvokeFunction
+  #     Principal: appsync.amazonaws.com
+  #     # SourceAccount: !Ref "AWS::AccountId"
+  #     # SourceArn: !GetAtt AppSync.Arn
 
-  deleteTodo:
-    handler: functions/deleteTodo.handler
-    environment:
-      TODO_TABLE_NAME: !Ref TodoTable
+# functions:
+#   getTodos:
+#     handler: functions/getTodos.handler
+#     environment:
+#       TODO_TABLE_NAME: !Ref TodoTable
 
-resources:
-  Resources:
-    TodoTable:
-      Type: "AWS::DynamoDB::Table"
-      Properties:
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        BillingMode: PAY_PER_REQUEST
-        TableName: ${self:custom.TODO_TABLE}
+#   appSyncAuthorization:
+#     handler: functions/appsync-authorizer.handler
+
+
+#   createTodo:
+#     handler: functions/createTodo.handler
+#     environment:
+#       TODO_TABLE_NAME: !Ref TodoTable
+
+#   updateTodo:
+#     handler: functions/updateTodo.handler
+#     environment:
+#       TODO_TABLE_NAME: !Ref TodoTable
+
+#   deleteTodo:
+#     handler: functions/deleteTodo.handler
+#     environment:
+#       TODO_TABLE_NAME: !Ref TodoTable
+
+# resources:
+#   Resources:
+#     TodoTable:
+#       Type: "AWS::DynamoDB::Table"
+#       Properties:
+#         KeySchema:
+#           - AttributeName: id
+#             KeyType: HASH
+#         AttributeDefinitions:
+#           - AttributeName: id
+#             AttributeType: S
+#         BillingMode: PAY_PER_REQUEST
+#         TableName: ${self:custom.TODO_TABLE}
